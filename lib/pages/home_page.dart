@@ -15,141 +15,261 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _cityController = TextEditingController();
 
   @override
+  void dispose() {
+    _cityController.dispose();
+    super.dispose();
+  }
+
+  void _searchWeather() {
+    if (_formKey.currentState!.validate()) {
+      final city = _cityController.text.trim();
+      context.read<WeatherProvider>().fetchWeather(city);
+      // Sembunyikan keyboard setelah menekan tombol
+      FocusScope.of(context).unfocus();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // final itemProvider = Provider.of<ItemProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text("APLIKASI TEST"), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: const Text(
+          "Weather App",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(
-                  labelText: "Nama Kota",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Text tidak boleh kosong";
-                  }
-                  if (value.length < 3) {
-                    return "Minimal 3 karakter";
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // ElevatedButton(
-              //   onPressed: () {
-              //     if (_formKey.currentState!.validate()) {
-              //       setState(() {
-              //         // itemProvider.addItem(_controller.text);
-              //         _controller.clear();
-              //       });
-              //       ScaffoldMessenger.of(context).showSnackBar(
-              //         const SnackBar(
-              //           content: Text("Data berhasil ditambahkan"),
-              //         ),
-              //       );
-              //     }
-              //   },
-              //   child: const Text("Lanjut"),
-              // ),
-              ElevatedButton(
-                onPressed: () {
-                  final city = _cityController.text.trim();
-                  if (city.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Nama kota tidak boleh kosong"),
-                      ),
-                    );
-                    return;
-                  }
-                  context.read<WeatherProvider>().fetchWeather(city);
-                },
-                child: const Text("Ambil Data Cuaca"),
-              ),
-
+              _buildSearchSection(),
+              const SizedBox(height: 32),
               Consumer<WeatherProvider>(
                 builder: (context, provider, child) {
                   if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (provider.error != null) {
-                    return Text(provider.error!);
-                  }
-                  if (provider.weather != null) {
-                    final formattedDate = DateFormat(
-                      'dd MMMM yyyy, HH:mm',
-                    ).format(provider.weather!.date);
-                    return Card(
-                      margin: const EdgeInsets.only(top: 20),
-                      child: ListTile(
-                        title: Text(provider.weather!.city),
-                        subtitle: Text(formattedDate),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text("${provider.weather!.temperature}°C"),
-                            Text(
-                              "Windspeed: ${provider.weather!.windspeed} km/h",
-                            ),
-                          ],
-                        ),
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40.0),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
-                  return const Text("Belum ada data cuaca");
+
+                  if (provider.error != null) {
+                    return _buildErrorState(provider.error!);
+                  }
+
+                  if (provider.weather != null) {
+                    return _buildWeatherCard(provider);
+                  }
+
+                  return _buildEmptyState();
                 },
               ),
-
-              // const SizedBox(height: 20),
-              // Expanded(
-              //   // child: itemProvider.items.isEmpty
-              //   //     ? const Center(
-              //   //         child: Text(
-              //   //           "Tidak ada data",
-              //   //           style: TextStyle(fontSize: 16),
-              //   //         ),
-              //   //       )
-              //   child: ListView.builder(
-              //     // itemCount: itemProvider.items.length,
-              //     itemBuilder: (context, index) {
-              //       return Card(
-              //         child: ListTile(
-              //           // title: Text(itemProvider.items[index]),
-              //           trailing: IconButton(
-              //             icon: const Icon(Icons.delete),
-              //             onPressed: () {
-              //               setState(() {
-              //                 // itemProvider.removeItem(
-              //                 //   itemProvider.items[index],
-              //                 // );
-              //               });
-              //               // if (itemProvider.items.isEmpty) {
-              //               //   ScaffoldMessenger.of(context).showSnackBar(
-              //               //     const SnackBar(
-              //               //       content: Text("Data berhasil dihapus"),
-              //               //     ),
-              //               //   );
-              //               // }
-              //             },
-              //           ),
-              //         ),
-              //       );
-              //     },
-              //   ),
-              // ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchSection() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _cityController,
+            decoration: InputDecoration(
+              labelText: "Masukkan Nama Kota",
+              hintText: "Contoh: Jakarta",
+              prefixIcon: const Icon(
+                Icons.location_city,
+                color: Colors.blueAccent,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(
+                  color: Colors.blueAccent.withOpacity(0.1),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(
+                  color: Colors.blueAccent,
+                  width: 2,
+                ),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return "Nama kota tidak boleh kosong";
+              }
+              return null;
+            },
+            onFieldSubmitted: (_) => _searchWeather(),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _searchWeather,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              elevation: 2,
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search),
+                SizedBox(width: 8),
+                Text(
+                  "Cek Cuaca",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherCard(WeatherProvider provider) {
+    final weather = provider.weather!;
+    final formattedDate = DateFormat('EEEE, dd MMMM yyyy').format(weather.date);
+    final formattedTime = DateFormat('HH:mm').format(weather.date);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.blueAccent, Colors.lightBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueAccent.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            weather.city,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            formattedDate,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Icon(Icons.wb_sunny, size: 80, color: Colors.orangeAccent),
+          // Icon statis sebagai contoh
+          const SizedBox(height: 16),
+          Text(
+            "${weather.temperature.toStringAsFixed(1)}°C",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 64,
+              fontWeight: FontWeight.w200,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Divider(color: Colors.white.withOpacity(0.3)),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildWeatherDetail(
+                Icons.air,
+                "Windspeed",
+                "${weather.windspeed} km/h",
+              ),
+              _buildWeatherDetail(Icons.access_time, "Updated", formattedTime),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherDetail(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Column(
+      children: [
+        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+        const SizedBox(height: 16),
+        Text(
+          error,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Column(
+      children: [
+        Icon(
+          Icons.cloud_queue,
+          size: 100,
+          color: Colors.blueAccent.withOpacity(0.2),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "Cari kota untuk melihat prakiraan cuaca",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
+        ),
+      ],
     );
   }
 }

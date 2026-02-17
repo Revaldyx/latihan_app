@@ -11,10 +11,7 @@ void main() async {
   await Hive.openBox('myBox');
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => WeatherProvider()),
-        // ChangeNotifierProvider(create: (_) => ItemProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => WeatherProvider())],
       child: const MyApp(),
     ),
   );
