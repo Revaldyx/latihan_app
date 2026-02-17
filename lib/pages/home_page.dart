@@ -29,6 +29,88 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Fungsi untuk mendapatkan icon berdasarkan weather code
+  Map<String, dynamic> _getWeatherIcon(int weatherCode) {
+    final iconColor = Colors.white;
+    final iconSize = 80.0;
+
+    // WMO Weather interpretation codes
+    if (weatherCode == 0) {
+      return {
+        'icon': Icons.wb_sunny,
+        'color': Colors.orangeAccent,
+        'size': iconSize,
+        'description': 'Cerah',
+      };
+    } else if (weatherCode == 1 || weatherCode == 2) {
+      return {
+        'icon': Icons.cloud,
+        'color': iconColor,
+        'size': iconSize,
+        'description': 'Sebagian Berawan',
+      };
+    } else if (weatherCode == 3) {
+      return {
+        'icon': Icons.cloud,
+        'color': iconColor,
+        'size': iconSize,
+        'description': 'Berawan',
+      };
+    } else if (weatherCode == 45 || weatherCode == 48) {
+      return {
+        'icon': Icons.cloud_queue,
+        'color': Colors.grey,
+        'size': iconSize,
+        'description': 'Berkabut',
+      };
+    } else if (weatherCode == 51 ||
+        weatherCode == 53 ||
+        weatherCode == 55 ||
+        weatherCode == 80 ||
+        weatherCode == 81 ||
+        weatherCode == 82) {
+      return {
+        'icon': Icons.cloud_download,
+        'color': Colors.lightBlue,
+        'size': iconSize,
+        'description': 'Hujan',
+      };
+    } else if (weatherCode == 61 || weatherCode == 63 || weatherCode == 65) {
+      return {
+        'icon': Icons.cloud_download,
+        'color': Colors.lightBlue,
+        'size': iconSize,
+        'description': 'Hujan',
+      };
+    } else if (weatherCode == 71 ||
+        weatherCode == 73 ||
+        weatherCode == 75 ||
+        weatherCode == 77 ||
+        weatherCode == 85 ||
+        weatherCode == 86) {
+      return {
+        'icon': Icons.cloud_queue,
+        'color': Colors.blue,
+        'size': iconSize,
+        'description': 'Salju',
+      };
+    } else if (weatherCode == 95 || weatherCode == 96 || weatherCode == 99) {
+      return {
+        'icon': Icons.flash_on,
+        'color': Colors.amber,
+        'size': iconSize,
+        'description': 'Badai Petir',
+      };
+    } else {
+      return {
+        'icon': Icons.help_outline,
+        'color': iconColor,
+        'size': iconSize,
+        'description': 'Tidak Diketahui',
+      };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,6 +184,7 @@ class _HomePageState extends State<HomePage> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
                 borderSide: BorderSide(
+                  // ignore: deprecated_member_use
                   color: Colors.blueAccent.withOpacity(0.1),
                 ),
               ),
@@ -154,6 +237,7 @@ class _HomePageState extends State<HomePage> {
     final weather = provider.weather!;
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy').format(weather.date);
     final formattedTime = DateFormat('HH:mm').format(weather.date);
+    final weatherInfo = _getWeatherIcon(weather.weatherCode);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -166,6 +250,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.blueAccent.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
@@ -186,13 +271,27 @@ class _HomePageState extends State<HomePage> {
           Text(
             formattedDate,
             style: TextStyle(
+              // ignore: deprecated_member_use
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 24),
-          const Icon(Icons.wb_sunny, size: 80, color: Colors.orangeAccent),
-          // Icon statis sebagai contoh
+          Icon(
+            weatherInfo['icon'],
+            size: weatherInfo['size'],
+            color: weatherInfo['color'],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            weatherInfo['description'],
+            style: TextStyle(
+              // ignore: deprecated_member_use
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             "${weather.temperature.toStringAsFixed(1)}°C",
@@ -203,6 +302,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 24),
+          // ignore: deprecated_member_use
           Divider(color: Colors.white.withOpacity(0.3)),
           const SizedBox(height: 16),
           Row(
@@ -228,6 +328,7 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 8),
         Text(
           label,
+          // ignore: deprecated_member_use
           style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
         ),
         Text(
@@ -261,6 +362,7 @@ class _HomePageState extends State<HomePage> {
         Icon(
           Icons.cloud_queue,
           size: 100,
+          // ignore: deprecated_member_use
           color: Colors.blueAccent.withOpacity(0.2),
         ),
         const SizedBox(height: 16),
