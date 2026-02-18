@@ -4,6 +4,7 @@ class WeatherModel {
   final double temperature;
   final double windspeed;
   final int weatherCode;
+  final List<DailyForecast> forecast;
 
   WeatherModel({
     required this.city,
@@ -11,21 +12,18 @@ class WeatherModel {
     required this.temperature,
     required this.windspeed,
     required this.weatherCode,
+    required this.forecast,
   });
+}
 
-  factory WeatherModel.fromJson(Map<String, dynamic> json) {
-    final current = json['current_weather'];
+class DailyForecast {
+  final DateTime date;
+  final double maxTemp;
+  final double minTemp;
 
-    if (current == null) {
-      throw Exception('Data cuaca tidak ditemukan');
-    }
-
-    return WeatherModel(
-      city: json['timezone'] ?? 'Unknown',
-      date: DateTime.parse(current['time']),
-      temperature: current['temperature'],
-      windspeed: current['windspeed'],
-      weatherCode: current['weather_code'] ?? 0,
-    );
-  }
+  DailyForecast({
+    required this.date,
+    required this.maxTemp,
+    required this.minTemp,
+  });
 }

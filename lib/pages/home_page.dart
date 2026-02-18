@@ -15,6 +15,17 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _cityController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadcity();
+  }
+
+  Future<void> _loadcity() async {
+    final provider = context.read<WeatherProvider>();
+    await provider.loadLastCity();
+  }
+
+  @override
   void dispose() {
     _cityController.dispose();
     super.dispose();

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../services/weather_services.dart';
+import 'package:latihan_app/data/repository/weather_repository.dart';
 import '../models/weather_model.dart';
 
 class WeatherProvider with ChangeNotifier {
-  final WeatherServices _services = WeatherServices();
+  final WeatherRepository repository;
+
+  WeatherProvider(this.repository);
 
   WeatherModel? weather;
   bool isLoading = false;
@@ -15,7 +17,7 @@ class WeatherProvider with ChangeNotifier {
       error = null;
       notifyListeners();
 
-      weather = await _services.fetchWeather(city);
+      weather = await repository.getWeather(city);
     } catch (e) {
       error = e is Exception
           ? e.toString().replaceFirst("Exception: ", "")
@@ -23,6 +25,13 @@ class WeatherProvider with ChangeNotifier {
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> loadLastCity() async {
+    final lastCity = await repository.loadLastCity();
+    if (lastCity != null) {
+      await fetchWeather(lastCity);
     }
   }
 }
