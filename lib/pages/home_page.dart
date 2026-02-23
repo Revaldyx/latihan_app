@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:latihan_app/providers/weather_providers.dart';
+import 'package:weather_app/providers/weather_providers.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 

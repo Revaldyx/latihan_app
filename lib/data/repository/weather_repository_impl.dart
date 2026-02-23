@@ -1,6 +1,6 @@
-import 'package:latihan_app/models/weather_model.dart';
-import 'package:latihan_app/data/datasources/weather_remote_datasources.dart';
-import 'package:latihan_app/data/datasources/weather_local_datasources.dart';
+import 'package:weather_app/models/weather_model.dart';
+import 'package:weather_app/data/datasources/weather_remote_datasources.dart';
+import 'package:weather_app/data/datasources/weather_local_datasources.dart';
 import 'weather_repository.dart';
 
 class WeatherRepositoryImpl extends WeatherRepository {

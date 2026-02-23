@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:latihan_app/data/repository/weather_repository.dart';
+import 'package:weather_app/data/repository/weather_repository.dart';
 import '../models/weather_model.dart';
 
 class WeatherProvider with ChangeNotifier {

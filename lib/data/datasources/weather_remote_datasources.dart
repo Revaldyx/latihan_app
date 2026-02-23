@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:latihan_app/models/weather_model.dart';
+import 'package:weather_app/models/weather_model.dart';
 
 class WeatherRemoteDatasource {
   Future<Map<String, dynamic>> _getCoordinates(String city) async {
