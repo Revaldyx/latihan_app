@@ -1,17 +1,27 @@
-# latihan_app
+# Weather App
 
-A new Flutter project.
+Aplikasi Flutter untuk melihat informasi cuaca terkini berdasarkan nama kota.
 
-## Getting Started
+## Fitur
 
-This project is a starting point for a Flutter application.
+- Pencarian kota secara realtime
+- Menampilkan data cuaca terkini
+- Interface yang responsif dan user-friendly
 
-A few resources to get you started if this is your first Flutter project:
+## Teknologi
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Flutter
+- Weather API
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Instalasi
+
+1. Clone repository
+2. Jalankan `flutter pub get`
+3. Jalankan `flutter run`
+
+## Penggunaan
+
+1. Buka aplikasi
+2. Cari nama kota di search bar
+3. Pilih kota yang diinginkan
+4. Lihat informasi cuaca terkini
