@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weather_app/models/weather_model.dart';
 import 'package:weather_app/providers/weather_providers.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -122,12 +123,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  String _formatDay(DateTime date) {
+    return DateFormat('EEE').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text(
+        title: const  Text(
           "Weather App",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
@@ -145,20 +150,20 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 32),
               Consumer<WeatherProvider>(
                 builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40.0),
-                        child: CircularProgressIndicator(),
+                  if (provider.state == WeatherState.loading) {
+                    return const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: CircularProgressIndicator()
                       ),
                     );
                   }
 
-                  if (provider.error != null) {
-                    return _buildErrorState(provider.error!);
+                  if (provider.state == WeatherState.error) {
+                    return Text(provider.errorMessage ?? "Terjadi kesalahan");
                   }
 
-                  if (provider.weather != null) {
+                  if (provider.state == WeatherState.loaded) {
                     return _buildWeatherCard(provider);
                   }
 
@@ -305,7 +310,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
           Text(
-            "${weather.temperature.toStringAsFixed(1)}°C",
+            "${weather.temperature.toStringAsFixed(0)}°C",
             style: const TextStyle(
               color: Colors.white,
               fontSize: 64,
@@ -327,6 +332,8 @@ class _HomePageState extends State<HomePage> {
               _buildWeatherDetail(Icons.access_time, "Updated", formattedTime),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildForecastList(weather.forecast),
         ],
       ),
     );
@@ -353,20 +360,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildErrorState(String error) {
-    return Column(
-      children: [
-        const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
-        const SizedBox(height: 16),
-        Text(
-          error,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.redAccent, fontSize: 16),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmptyState() {
     return Column(
       children: [
@@ -383,6 +376,57 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(color: Colors.grey[600], fontSize: 16),
         ),
       ],
+    );
+  }
+  Widget _buildForecastList(List<DailyForecast> forecast) {
+    return SizedBox(
+      height: 120,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: forecast.length,
+        itemBuilder: (context, index) {
+          final item = forecast[index];
+          return Container(
+            width: 100,
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDay(item.date),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(
+                  _getWeatherIcon(item.weatherCode)['icon'],
+                  size: 30,
+                  color: Colors.blueAccent,
+          ),
+          Text (
+            "${item.maxTemp.toStringAsFixed(0)}° / ${item.minTemp.toStringAsFixed(0)}°",
+            style: const TextStyle(fontSize: 12),
+          ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
