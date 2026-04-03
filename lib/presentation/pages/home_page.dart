@@ -18,13 +18,21 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadcity();
+    Future.microtask(() => _initWeather());
   }
 
-  Future<void> _loadcity() async {
+  Future<void> _initWeather() async {
     final provider = context.read<WeatherProvider>();
-    await provider.loadLastCity();
+    await provider.fetchWeatherByLocation();
+    if (provider.weather == null) {
+      await provider.loadLastCity();
+    }
   }
+
+  // Future<void> _loadcity() async {
+  //   final provider = context.read<WeatherProvider>();
+  //   await provider.loadLastCity();
+  // }
 
   @override
   void dispose() {
@@ -127,6 +135,13 @@ class _HomePageState extends State<HomePage> {
     return DateFormat('EEE').format(date);
   }
 
+  String toTitleCase(String text) {
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -160,7 +175,7 @@ class _HomePageState extends State<HomePage> {
                   }
 
                   if (provider.state == WeatherState.error) {
-                    return Text(provider.errorMessage ?? "Terjadi kesalahan");
+                    return _buildErrorState(provider.errorMessage);
                   }
 
                   if (provider.state == WeatherState.loaded) {
@@ -170,10 +185,47 @@ class _HomePageState extends State<HomePage> {
                   return _buildEmptyState();
                 },
               ),
+              // ElevatedButton.icon(onPressed: (){
+              //   context.read<WeatherProvider>().fetchWeatherByLocation();
+              // }, 
+              // icon: const Icon(Icons.my_location, color: Colors.white),
+              // label: const Text("Gunakan Lokasi Saya", style: TextStyle(color: Colors.blue),))
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildErrorState(String? message) {
+    return Column(
+      children: [
+        const SizedBox(height: 40),
+        Icon(
+          Icons.location_off,
+          size: 80,
+          color: Colors.grey[400],
+        ),
+        
+        const SizedBox(height: 16),
+
+        Text(
+          message ?? "Terjadi Kesalahan",
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton.icon(
+          onPressed: () {
+            context.read<WeatherProvider>().fetchWeatherByLocation();
+          },
+          icon: const Icon(Icons.my_location),
+          label: const Text("Gunakan Lokasi Saya"),
+          )
+      ],
     );
   }
 
@@ -274,9 +326,9 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       child: Column(
-        children: [
+        children: [ 
           Text(
-            weather.city,
+            toTitleCase(weather.city),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 28,

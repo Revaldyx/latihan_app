@@ -35,7 +35,7 @@ void main() async {
             local: WeatherLocalDataSource(),
           ),
         ),
-        ChangeNotifierProvider(
+        ChangeNotifierProvider<WeatherProvider>(
           create: (context) =>
               WeatherProvider(context.read<WeatherRepository>()),
         ),

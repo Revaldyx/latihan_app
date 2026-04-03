@@ -14,6 +14,24 @@ class WeatherModel {
     required this.weatherCode,
     required this.forecast,
   });
+
+  WeatherModel copyWith({
+    String? city,
+    DateTime? date,
+    double? temperature,
+    double? windspeed,
+    int? weatherCode,
+    List<DailyForecast>? forecast,
+  }) {
+    return WeatherModel(
+      city: city ?? this.city,
+      date: date ?? this.date,
+      temperature: temperature ?? this.temperature,
+      windspeed: windspeed ?? this.windspeed,
+      weatherCode: weatherCode ?? this.weatherCode,
+      forecast: forecast ?? this.forecast,
+    );
+  }
 }
 
 class DailyForecast {
@@ -28,4 +46,6 @@ class DailyForecast {
     required this.minTemp,
     required this.weatherCode,
   });
+  
 }
+

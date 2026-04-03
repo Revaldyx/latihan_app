@@ -35,4 +35,21 @@ class WeatherRepositoryImpl implements WeatherRepository {
   Future<String?> loadLastCity() async {
     return await local.getLastCity();
   }
+
+  @override
+  Future<WeatherModel> getWeatherByLoc(double lat, double lon) async {
+    try {
+      return await remote.fetchWeatherByCoord(lat, lon);
+    } on NetworkException {
+      throw const NetworkFailure();
+    } on ServerException {
+      throw const ServerFailure();
+    } on NotFoundException {
+      throw const NotFoundFailure();
+    } on ParsingException {
+      throw const ParsingFailure();
+    } catch (e) {
+      throw const ServerFailure();
+    }
+  }
 }

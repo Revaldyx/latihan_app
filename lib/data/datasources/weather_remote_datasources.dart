@@ -96,5 +96,46 @@ class WeatherRemoteDatasource {
     }
   }
 
-  
+  Future <WeatherModel> fetchWeatherByCoord(double lat, double lon) async {
+    final weatherUrl = Uri.parse(
+      "https://api.open-meteo.com/v1/forecast"
+      "?latitude=$lat"
+      "&longitude=$lon"
+      "&current_weather=true"
+      "&daily=temperature_2m_max,temperature_2m_min,weathercode"
+      "&timezone=auto",
+    );
+
+    try {
+      final weatherResponse = await http.get(weatherUrl);
+      if (weatherResponse.statusCode == 500) {
+        throw ServerException();
+      }
+
+      final weatherData = jsonDecode(weatherResponse.body);
+      final current = weatherData['current_weather'];
+      final daily = weatherData['daily'];
+
+      List<DailyForecast> forecast = [];
+      for (int i = 0; i < daily['time'].length; i++) {
+        forecast.add(DailyForecast(
+          date: DateTime.parse(daily['time'][i]),
+          maxTemp: (daily['temperature_2m_max'][i] as num).toDouble(),
+          minTemp: (daily['temperature_2m_min'][i] as num).toDouble(),
+          weatherCode: (daily['weathercode'][i] as num).toInt(),
+        ));
+      } 
+
+      return WeatherModel(
+        city: 'Lokasi Saat Ini',
+        date: DateTime.parse(current['time']),
+        temperature: (current['temperature'] as num).toDouble(),
+        windspeed: (current['windspeed'] as num).toDouble(),
+        weatherCode: current['weathercode'],
+        forecast: forecast,
+      );
+    } catch (_) {
+      throw NetworkException();
+    }
+  }
 }
