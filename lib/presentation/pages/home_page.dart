@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:weather_app/core/error/failure.dart';
 import 'package:weather_app/data/models/weather_model.dart';
 import 'package:weather_app/presentation/providers/weather_providers.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:app_settings/app_settings.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:lottie/lottie.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,11 +33,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Future<void> _loadcity() async {
-  //   final provider = context.read<WeatherProvider>();
-  //   await provider.loadLastCity();
-  // }
-
   @override
   void dispose() {
     _cityController.dispose();
@@ -44,88 +43,62 @@ class _HomePageState extends State<HomePage> {
     if (_formKey.currentState!.validate()) {
       final city = _cityController.text.trim();
       context.read<WeatherProvider>().fetchWeather(city);
-      // Sembunyikan keyboard setelah menekan tombol
       FocusScope.of(context).unfocus();
     }
   }
 
-  // Fungsi untuk mendapatkan icon berdasarkan weather code
-  Map<String, dynamic> _getWeatherIcon(int weatherCode) {
-    final iconColor = Colors.white;
-    final iconSize = 80.0;
-
+  Map<String, dynamic> _getWeatherAnimation(int weatherCode) {
     // WMO Weather interpretation codes
     if (weatherCode == 0) {
       return {
-        'icon': Icons.wb_sunny,
-        'color': Colors.orangeAccent,
-        'size': iconSize,
+        'icon': 'assets/animations/sunny.json',
         'description': 'Cerah',
       };
-    } else if (weatherCode == 1 || weatherCode == 2) {
+    } else if (weatherCode == 1) {
       return {
-        'icon': Icons.cloud,
-        'color': iconColor,
-        'size': iconSize,
+        'icon': 'assets/animations/partly-cloudy.json',
+        'description': 'Sebagian Berawan',
+      };
+    } else if (weatherCode == 2) {
+      return {
+        'icon': 'assets/animations/partly-cloudy.json',
         'description': 'Sebagian Berawan',
       };
     } else if (weatherCode == 3) {
       return {
-        'icon': Icons.cloud,
-        'color': iconColor,
-        'size': iconSize,
+        'icon': 'assets/animations/cloudy.json',
         'description': 'Berawan',
       };
     } else if (weatherCode == 45 || weatherCode == 48) {
       return {
-        'icon': Icons.cloud_queue,
-        'color': Colors.grey,
-        'size': iconSize,
+        'icon': 'assets/animations/fog.json',
         'description': 'Berkabut',
       };
-    } else if (weatherCode == 51 ||
-        weatherCode == 53 ||
-        weatherCode == 55 ||
-        weatherCode == 80 ||
-        weatherCode == 81 ||
-        weatherCode == 82) {
+    } else if ((weatherCode >= 51 && weatherCode <= 57) || 
+               (weatherCode >= 61 && weatherCode <= 67) ||
+               (weatherCode >= 80 && weatherCode <= 82)) {
       return {
-        'icon': Icons.cloud_download,
-        'color': Colors.lightBlue,
-        'size': iconSize,
+        'icon': 'assets/animations/rainy.json',
         'description': 'Hujan',
       };
-    } else if (weatherCode == 61 || weatherCode == 63 || weatherCode == 65) {
+    } else if (weatherCode >= 71 && weatherCode <= 77) {
       return {
-        'icon': Icons.cloud_download,
-        'color': Colors.lightBlue,
-        'size': iconSize,
-        'description': 'Hujan',
-      };
-    } else if (weatherCode == 71 ||
-        weatherCode == 73 ||
-        weatherCode == 75 ||
-        weatherCode == 77 ||
-        weatherCode == 85 ||
-        weatherCode == 86) {
-      return {
-        'icon': Icons.cloud_queue,
-        'color': Colors.blue,
-        'size': iconSize,
+        'icon': 'assets/animations/snow.json',
         'description': 'Salju',
+      };
+    } else if (weatherCode == 85 || weatherCode == 86) {
+      return {
+        'icon': 'assets/animations/snow.json',
+        'description': 'Hujan Salju Lebat',
       };
     } else if (weatherCode == 95 || weatherCode == 96 || weatherCode == 99) {
       return {
-        'icon': Icons.flash_on,
-        'color': Colors.amber,
-        'size': iconSize,
+        'icon': 'assets/animations/storm.json',
         'description': 'Badai Petir',
       };
     } else {
       return {
-        'icon': Icons.help_outline,
-        'color': iconColor,
-        'size': iconSize,
+        'icon': 'assets/animations/cloudy.json',
         'description': 'Tidak Diketahui',
       };
     }
@@ -136,10 +109,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   String toTitleCase(String text) {
-    return text.split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    return text
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 
   @override
@@ -147,13 +123,19 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const  Text(
+        title: const Text(
           "Weather App",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         backgroundColor: Colors.blueAccent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _initWeather,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -166,16 +148,11 @@ class _HomePageState extends State<HomePage> {
               Consumer<WeatherProvider>(
                 builder: (context, provider, child) {
                   if (provider.state == WeatherState.loading) {
-                    return const SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: CircularProgressIndicator()
-                      ),
-                    );
+                    return _buildLoadingSkeleton();
                   }
 
                   if (provider.state == WeatherState.error) {
-                    return _buildErrorState(provider.errorMessage);
+                    return _buildErrorState(provider.failure);
                   }
 
                   if (provider.state == WeatherState.loaded) {
@@ -185,11 +162,6 @@ class _HomePageState extends State<HomePage> {
                   return _buildEmptyState();
                 },
               ),
-              // ElevatedButton.icon(onPressed: (){
-              //   context.read<WeatherProvider>().fetchWeatherByLocation();
-              // }, 
-              // icon: const Icon(Icons.my_location, color: Colors.white),
-              // label: const Text("Gunakan Lokasi Saya", style: TextStyle(color: Colors.blue),))
             ],
           ),
         ),
@@ -197,35 +169,124 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildErrorState(String? message) {
+  Widget _buildLoadingSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 250,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 100,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(Failure? failure) {
+    IconData icon;
+    String title;
+    String subtitle;
+
+    if (failure is NetworkFailure) {
+      icon = Icons.wifi_off;
+      title = "Tidak Ada Koneksi Internet";
+      subtitle = "Periksa koneksi Anda dan coba lagi.";
+    } else if (failure is NotFoundFailure) {
+      icon = Icons.wrong_location;
+      title = "Kota Tidak Ditemukan";
+      subtitle = "Coba gunakan nama kota lain.";
+    } else if (failure is ServerFailure) {
+      icon = Icons.cloud_off;
+      title = "Server Bermasalah";
+      subtitle = "Coba lagi nanti.";
+    } else if (failure is LocationFailure) {
+      icon = Icons.location_off;
+      title = "Gagal Mendapatkan Lokasi";
+      subtitle = "Pastikan izin lokasi diberikan dan coba lagi.";
+    } else {
+      icon = Icons.error_outline;
+      title = "Terjadi Kesalahan";
+      subtitle = failure?.message ?? "Coba lagi nanti.";
+    }
+
     return Column(
       children: [
-        const SizedBox(height: 40),
-        Icon(
-          Icons.location_off,
-          size: 80,
-          color: Colors.grey[400],
-        ),
-        
+        Icon(icon, size: 80, color: Colors.grey),
         const SizedBox(height: 16),
-
         Text(
-          message ?? "Terjadi Kesalahan",
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          subtitle,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
         ),
         const SizedBox(height: 20),
-        ElevatedButton.icon(
-          onPressed: () {
-            context.read<WeatherProvider>().fetchWeatherByLocation();
-          },
-          icon: const Icon(Icons.my_location),
-          label: const Text("Gunakan Lokasi Saya"),
-          )
+        _buildActionButton(failure),
       ],
+    );
+  }
+
+  Widget _buildActionButton(Failure? failure) {
+    if (failure is LocationFailure) {
+      return Column(
+        children: [
+          ElevatedButton.icon(
+            onPressed: () {
+              context.read<WeatherProvider>().fetchWeatherByLocation();
+            },
+            icon: const Icon(Icons.my_location),
+            label: const Text("Coba Lagi"),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            onPressed: () {
+              AppSettings.openAppSettings(type: AppSettingsType.location);
+            },
+            icon: const Icon(Icons.settings),
+            label: const Text("Pengaturan Lokasi"),
+          ),
+        ],
+      );
+    }
+
+    if (failure is NetworkFailure) {
+      return ElevatedButton.icon(
+        onPressed: _initWeather,
+        icon: const Icon(Icons.refresh),
+        label: const Text("Coba Lagi"),
+      );
+    }
+    return ElevatedButton.icon(
+      onPressed: _searchWeather,
+      icon: const Icon(Icons.refresh),
+      label: const Text("Coba Lagi"),
     );
   }
 
@@ -305,7 +366,7 @@ class _HomePageState extends State<HomePage> {
     final weather = provider.weather!;
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy').format(weather.date);
     final formattedTime = DateFormat('HH:mm').format(weather.date);
-    final weatherInfo = _getWeatherIcon(weather.weatherCode);
+    final weatherInfo = _getWeatherAnimation(weather.weatherCode);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -326,12 +387,12 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       child: Column(
-        children: [ 
+        children: [
           Text(
             toTitleCase(weather.city),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -345,10 +406,9 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 24),
-          Icon(
+          Lottie.asset(
             weatherInfo['icon'],
-            size: weatherInfo['size'],
-            color: weatherInfo['color'],
+            height: 120,
           ),
           const SizedBox(height: 8),
           Text(
@@ -385,7 +445,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildForecastList(weather.forecast),
+          _buildForecastList(weather.forecast, weather.date),
         ],
       ),
     );
@@ -415,11 +475,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildEmptyState() {
     return Column(
       children: [
-        Icon(
-          Icons.cloud_queue,
-          size: 100,
-          // ignore: deprecated_member_use
-          color: Colors.blueAccent.withOpacity(0.2),
+        Lottie.asset(
+          'assets/animations/cloudy.json',
+          height: 100,
         ),
         const SizedBox(height: 16),
         Text(
@@ -430,21 +488,27 @@ class _HomePageState extends State<HomePage> {
       ],
     );
   }
-  Widget _buildForecastList(List<DailyForecast> forecast) {
+
+  Widget _buildForecastList(List<DailyForecast> forecast, DateTime currentDate) {
+    final upcomingForecast = forecast.where((item) {
+      return !DateUtils.isSameDay(item.date, currentDate);
+    }).toList();
+
     return SizedBox(
       height: 120,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: forecast.length,
+        itemCount: upcomingForecast.length,
         itemBuilder: (context, index) {
-          final item = forecast[index];
+          final item = upcomingForecast[index];
+          final anim = _getWeatherAnimation(item.weatherCode);
           return Container(
             width: 100,
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               // ignore: deprecated_member_use
-              color: Colors.white.withOpacity(0.9),
+              color: const Color.fromARGB(255, 205, 160, 235).withOpacity(0.9),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -465,15 +529,17 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Icon(
-                  _getWeatherIcon(item.weatherCode)['icon'],
-                  size: 30,
-                  color: Colors.blueAccent,
-          ),
-          Text (
-            "${item.maxTemp.toStringAsFixed(0)}° / ${item.minTemp.toStringAsFixed(0)}°",
-            style: const TextStyle(fontSize: 12),
-          ),
+                Lottie.asset(
+                  anim['icon'],
+                  height: 50,
+                  repeat: true,
+                  animate: true,
+                  frameRate: FrameRate(30),
+                ),
+                Text(
+                  "${item.maxTemp.toStringAsFixed(0)}° / ${item.minTemp.toStringAsFixed(0)}°",
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
           );

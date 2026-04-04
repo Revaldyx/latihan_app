@@ -13,11 +13,12 @@ class WeatherProvider with ChangeNotifier {
 
   WeatherState state = WeatherState.initial;
   WeatherModel? weather;
-  String? errorMessage;
+  Failure? failure;
 
   
   Future<bool> fetchWeatherByLocation() async {
     state = WeatherState.loading;
+    failure = null;
     notifyListeners();
 
     try {
@@ -32,19 +33,19 @@ class WeatherProvider with ChangeNotifier {
         position.latitude, position.longitude,
       );
       weather = weather!.copyWith(city: cityName);
-
+      
       state = WeatherState.loaded;
       notifyListeners();
       return true;
     }
     on Failure catch (e) {
       weather = null;
-      errorMessage = e.message;
+      failure = e;
       state = WeatherState.error;
     }
     catch (_) {
       weather = null;
-      errorMessage = 'An unexpected error occurred';
+      failure = LocationFailure("Failed to retrieve location");
       state = WeatherState.error;
     }
     notifyListeners();
@@ -53,21 +54,22 @@ class WeatherProvider with ChangeNotifier {
   
   Future<void> fetchWeather(String city) async {
     state = WeatherState.loading;
-    errorMessage = null;
+    failure = null;
     weather = null;
 
     try {
       weather = await repository.getWeather(city);
       state = WeatherState.loaded;
+      failure = null;
     }
     on Failure catch (e) {
       weather = null;
-      errorMessage = e.message;
+      failure = e;
       state = WeatherState.error;
     }
     catch (_) {
       weather = null;
-      errorMessage = 'An unexpected error occurred';
+      failure = const NetworkFailure();
       state = WeatherState.error;
     }
     notifyListeners();

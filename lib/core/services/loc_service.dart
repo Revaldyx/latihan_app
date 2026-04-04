@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import '../../core/error/failure.dart';
 
 class LocationService {
   Future<Position> getCurrentLocation() async {
@@ -8,17 +9,17 @@ class LocationService {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      throw Exception('GPS Tidak Aktif');
+      throw const LocationFailure('GPS Tidak Aktif');
     }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception('Izin Lokasi Ditolak');
+        throw const LocationFailure('Izin Lokasi Ditolak');
       }
       if (permission == LocationPermission.deniedForever) {
-        throw Exception('Izin Lokasi Ditolak Permanen');
+        throw const LocationFailure('Izin Lokasi Ditolak Permanen');
       }
     }
     return await Geolocator.getCurrentPosition(

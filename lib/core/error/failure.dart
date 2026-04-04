@@ -18,3 +18,7 @@ class NotFoundFailure extends Failure {
 class ParsingFailure extends Failure {
   const ParsingFailure() : super("Terjadi kesalahan saat memproses data.");
 }
+
+class LocationFailure extends Failure {
+  const LocationFailure(super.message);
+}
